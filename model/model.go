@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"sync/atomic"
 
 	_ "golang.org/x/image/bmp"
 	_ "golang.org/x/image/tiff"
@@ -71,6 +72,9 @@ type MultimodalProcessor interface {
 type Base struct {
 	b ml.Backend
 	config
+
+	// lastGenerate stores the unix time of the most recent Generate call.
+	lastGenerate atomic.Int64
 }
 
 type config struct {
@@ -99,16 +103,18 @@ func Register(name string, f func(fs.Config) (Model, error)) {
 
 // New initializes a new model instance with the provided configuration based on the metadata in the model file
 func New(modelPath string, params ml.BackendParams) (Model, error) {
-	if fp, err := os.Open(modelPath); err == nil {
-		data, err := mmap(fp)
-		if err == nil {
-			if os.Getenv("OLLAMA_WARMUP_SYNC") == "1" {
-				warmUpWeights(fp, data)
+	if params.WarmUp && os.Getenv("OLLAMA_DISABLE_WARMUP") != "1" {
+		if fp, err := os.Open(modelPath); err == nil {
+			data, err := mmap(fp)
+			if err == nil {
+				if os.Getenv("OLLAMA_WARMUP_SYNC") == "1" {
+					warmUpWeights(fp, data)
+				} else {
+					go func(f *os.File, d []byte) { warmUpWeights(f, d) }(fp, data)
+				}
 			} else {
-				go warmUpWeights(fp, data)
+				fp.Close()
 			}
-		} else {
-			fp.Close()
 		}
 	}
 

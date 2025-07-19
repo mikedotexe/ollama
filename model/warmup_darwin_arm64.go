@@ -10,11 +10,19 @@ import (
 	"time"
 
 	"golang.org/x/sys/unix"
+
+	"github.com/ollama/ollama/internal/hardware"
 )
 
 var pageSize = unix.Getpagesize()
 
-const slcTargetBytes = 32 * 1024 * 1024
+var slcTargetBytes = func() int {
+	n := hardware.DetectSLCMiB() * 1024 * 1024
+	if n == 0 {
+		n = 32 * 1024 * 1024
+	}
+	return n
+}()
 
 func warmUpWeights(f *os.File, data []byte) {
 	defer f.Close()
@@ -41,15 +49,25 @@ func warmUpWeights(f *os.File, data []byte) {
 	}
 
 	start := time.Now()
-	deadline := start.Add(100 * time.Millisecond)
+	dur := 100 * time.Millisecond
+	if s := os.Getenv("OLLAMA_WARMUP_BUDGET_MS"); s != "" {
+		if n, err := strconv.Atoi(s); err == nil && n >= 0 {
+			dur = time.Duration(n) * time.Millisecond
+		}
+	}
+	if dur == 0 {
+		return
+	}
+	deadline := start.Add(dur)
 
 	_ = unix.Madvise(data[:budget], unix.MADV_WILLNEED)
-	locked := false
-	if err := unix.Mlock(data[:budget]); err == nil {
-		locked = true
+	locked := unix.Mlock(data[:budget]) == nil
+	if locked {
+		defer unix.Munlock(data[:budget])
 	}
 
-	for off := 0; off < budget; off += pageSize {
+	stride := 3 * pageSize
+	for off := 0; off < budget; off += stride {
 		_ = data[off]
 		if time.Now().After(deadline) {
 			break
@@ -57,7 +75,7 @@ func warmUpWeights(f *os.File, data []byte) {
 	}
 
 	if locked {
-		_ = unix.Munlock(data[:budget])
+		// unlock handled by defer
 	}
 
 	if os.Getenv("OLLAMA_WARMUP_VERBOSE") == "1" {
