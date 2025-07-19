@@ -610,6 +610,9 @@ See the [API documentation](./docs/api.md) for all endpoints.
 
 ## Warm-up environment variables
 
+Warm-up can also be toggled with the global `--warmup`/`--no-warmup` flag on the
+`ollama` command which sets `OLLAMA_DISABLE_WARMUP` accordingly.
+
 | Variable | Purpose | Default |
 |----------|---------|---------|
 | `OLLAMA_DISABLE_WARMUP` | Skip model warm-up entirely | unset |
