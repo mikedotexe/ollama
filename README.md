@@ -607,3 +607,14 @@ See the [API documentation](./docs/api.md) for all endpoints.
 - [HoneyHive](https://docs.honeyhive.ai/integrations/ollama) is an AI observability and evaluation platform for AI agents. Use HoneyHive to evaluate agent performance, interrogate failures, and monitor quality in production.
 - [Langfuse](https://langfuse.com/docs/integrations/ollama) is an open source LLM observability platform that enables teams to collaboratively monitor, evaluate and debug AI applications.
 - [MLflow Tracing](https://mlflow.org/docs/latest/llms/tracing/index.html#automatic-tracing) is an open source LLM observability tool with a convenient API to log and visualize traces, making it easy to debug and evaluate GenAI applications.
+
+## Warm-up environment variables
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `OLLAMA_DISABLE_WARMUP` | Skip model warm-up entirely | unset |
+| `OLLAMA_WARMUP_BYTES` | Override warm-up byte window | 32MB |
+| `OLLAMA_WARMUP_SYNC` | Perform warm-up synchronously | unset |
+| `OLLAMA_WARMUP_VERBOSE` | Log warm-up timing | unset |
+
+See [docs/perf.md](docs/perf.md) for measuring first-token latency.
