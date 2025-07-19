@@ -610,11 +610,9 @@ See the [API documentation](./docs/api.md) for all endpoints.
 
 ## Warm-up environment variables
 
-| Variable | Purpose | Default |
-|----------|---------|---------|
-| `OLLAMA_DISABLE_WARMUP` | Skip model warm-up entirely | unset |
-| `OLLAMA_WARMUP_BYTES` | Override warm-up byte window | 32MB |
-| `OLLAMA_WARMUP_SYNC` | Perform warm-up synchronously | unset |
-| `OLLAMA_WARMUP_VERBOSE` | Log warm-up timing | unset |
+Warm-up can also be toggled with the global `--warmup`/`--no-warmup` flag on the
+`ollama` command which sets `OLLAMA_DISABLE_WARMUP` accordingly.
+
+See [docs/warmup_env.md](docs/warmup_env.md) for all warm-up related environment variables.
 
 See [docs/perf.md](docs/perf.md) for measuring first-token latency.

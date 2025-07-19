@@ -66,6 +66,9 @@ func ensureThinkingSupport(ctx context.Context, client *api.Client, name string)
 
 var errModelfileNotFound = errors.New("specified Modelfile wasn't found")
 
+// warmup controls whether model warm-up runs on load.
+var warmup = true
+
 func getModelfileName(cmd *cobra.Command) (string, error) {
 	filename, _ := cmd.Flags().GetString("file")
 
@@ -1414,7 +1417,16 @@ func NewCLI() *cobra.Command {
 		},
 	}
 
+	rootCmd.PersistentFlags().BoolVar(&warmup, "warmup", true, "warm up model weights before first use")
 	rootCmd.Flags().BoolP("version", "v", false, "Show version information")
+
+	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		if warmup {
+			os.Unsetenv("OLLAMA_DISABLE_WARMUP")
+		} else {
+			os.Setenv("OLLAMA_DISABLE_WARMUP", "1")
+		}
+	}
 
 	createCmd := &cobra.Command{
 		Use:     "create MODEL",

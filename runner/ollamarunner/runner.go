@@ -902,6 +902,7 @@ func Execute(args []string) error {
 	numGPULayers := fs.Int("n-gpu-layers", 0, "Number of layers to offload to GPU")
 	mainGPU := fs.Int("main-gpu", 0, "Main GPU")
 	flashAttention := fs.Bool("flash-attn", false, "Enable flash attention")
+	warmupFlag := fs.Bool("warmup", true, "prefetch model weights before first token")
 	kvSize := fs.Int("ctx-size", 2048, "Context (or KV cache) size")
 	kvCacheType := fs.String("kv-cache-type", "", "quantization type for KV cache (default: f16)")
 	port := fs.Int("port", 8080, "Port to expose the server on")
@@ -954,6 +955,7 @@ func Execute(args []string) error {
 		MainGPU:        *mainGPU,
 		TensorSplit:    tensorSplitFloats,
 		FlashAttention: *flashAttention,
+		WarmUp:         *warmupFlag,
 	}
 
 	go server.load(ctx, *mpath, params, lpaths, *parallel, *kvCacheType, *kvSize, *multiUserCache)

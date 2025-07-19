@@ -71,6 +71,9 @@ type BackendParams struct {
 
 	// FlashAttention indicates that we should use a fused flash attention kernel
 	FlashAttention bool
+
+	// WarmUp indicates that the model weights should be prefetched on load.
+	WarmUp bool
 }
 
 // ErrNoMem is returned when panicing due to insufficient memory. It includes

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"sort"
@@ -39,8 +40,7 @@ func chat(ctx context.Context, prompt string) error {
 }
 
 func main() {
-	const prompt = "Say the single word <EOS> and stop."
-
+	prompt := flag.String("prompt", "Say the single word <EOS> and stop.", "prompt text")
 	warm := flag.Bool("warm", true, "enable warm-up")
 	flag.Parse()
 
@@ -51,16 +51,21 @@ func main() {
 	ctx := context.Background()
 
 	start := time.Now()
-	_ = chat(ctx, prompt)
+	_ = chat(ctx, *prompt)
 	prime := time.Since(start)
 
 	var lats []time.Duration
 	for i := 0; i < 25; i++ {
 		t0 := time.Now()
-		_ = chat(ctx, prompt)
+		_ = chat(ctx, *prompt)
 		lats = append(lats, time.Since(t0))
 	}
 
 	p95 := percentile(lats, 95)
 	log.Printf("prime=%v  p95=%v  (n=%d)", prime, p95, len(lats))
+	fmt.Printf("%d,%d\n", prime.Nanoseconds(), p95.Nanoseconds())
+	if f, err := os.Create("warm.json"); err == nil {
+		fmt.Fprintf(f, `{"prime_ns":%d,"p95_ns":%d}\n`, prime.Nanoseconds(), p95.Nanoseconds())
+		f.Close()
+	}
 }
