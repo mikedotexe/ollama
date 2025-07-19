@@ -99,6 +99,19 @@ func Register(name string, f func(fs.Config) (Model, error)) {
 
 // New initializes a new model instance with the provided configuration based on the metadata in the model file
 func New(modelPath string, params ml.BackendParams) (Model, error) {
+	if fp, err := os.Open(modelPath); err == nil {
+		data, err := mmap(fp)
+		if err == nil {
+			if os.Getenv("OLLAMA_WARMUP_SYNC") == "1" {
+				warmUpWeights(fp, data)
+			} else {
+				go warmUpWeights(fp, data)
+			}
+		} else {
+			fp.Close()
+		}
+	}
+
 	b, err := ml.NewBackend(modelPath, params)
 	if err != nil {
 		return nil, err
